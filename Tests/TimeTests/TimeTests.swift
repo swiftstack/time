@@ -54,4 +54,12 @@ final class TimeTests: TestCase {
         let nanoseconds = Time(seconds: 0, nanoseconds: 123)
         assertEqual(nanoseconds.description, "123 ns")
     }
+
+    func testDouble() {
+        let duration = Time.Duration(seconds: 123, nanoseconds: 321_000_000)
+        let timeInterval = Double(duration)
+        assertEqual(timeInterval, 123.321)
+        let original = Time.Duration(timeInterval)
+        assertEqual(original, duration)
+    }
 }
