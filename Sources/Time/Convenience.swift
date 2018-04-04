@@ -3,11 +3,23 @@
 extension Time: TimeProtocol{}
 extension Time.Duration: TimeProtocol{}
 
-public protocol TimeProtocol {
+public protocol TimeProtocol: Codable {
     var seconds: Int { get }
     var nanoseconds: Int { get }
 
     init(seconds: Int, nanoseconds: Int)
+}
+
+extension TimeProtocol {
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        self = Self(try container.decode(Double.self))
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(Double(self))
+    }
 }
 
 extension TimeProtocol {
