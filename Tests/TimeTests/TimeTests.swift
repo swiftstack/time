@@ -5,6 +5,7 @@ final class TimeTests: TestCase {
     func testNow() {
         assertNotEqual(Time(), .now)
         assertEqual(Time().seconds, Time.now.seconds)
+        assertTrue(Time() > Time(seconds: 1523558109, nanoseconds: 0))
     }
 
     func testDuration() {
