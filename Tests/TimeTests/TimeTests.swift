@@ -63,4 +63,10 @@ final class TimeTests: TestCase {
         let original = Time.Duration(timeInterval)
         assertEqual(original, duration)
     }
+
+    func testFromString() {
+        let time = Time("12/04/18 18:26:32", format: "%d/%m/%y %T")
+        assertEqual(time?.seconds, 1523557592)
+        assertEqual(time?.nanoseconds, 0)
+    }
 }

@@ -63,6 +63,22 @@ extension Time.Interval {
     }
 }
 
+// MARK: from string
+
+extension Time {
+    public init?(_ string: String, format: String) {
+        var t = tm()
+        guard strptime(string, format, &t) != nil else {
+            return nil
+        }
+        let time = timegm(&t)
+        guard time != -1 else {
+            return nil
+        }
+        self.init(seconds: time, nanoseconds: 0)
+    }
+}
+
 // MARK: Equatable
 
 extension Time: Equatable {
