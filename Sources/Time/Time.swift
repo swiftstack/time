@@ -1,3 +1,6 @@
+#if os(Linux)
+import CTime
+#endif
 import Platform
 
 public struct Time {

@@ -23,3 +23,8 @@ let package = Package(
             dependencies: ["Test", "Time"])
     ]
 )
+
+#if os(Linux)
+package.targets.append(.target(name: "CTime"))
+package.targets[0].dependencies.append("CTime")
+#endif
