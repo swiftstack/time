@@ -3,7 +3,8 @@ import Test
 
 final class TimeTests: TestCase {
     func testNow() {
-	    expect(Time() != .now)
+        func now() -> Time { .now }
+	    expect(Time() != now())
         expect(Time().seconds == Time.now.seconds)
         expect(Time() > Time(seconds: 1523558109, nanoseconds: 0))
     }
