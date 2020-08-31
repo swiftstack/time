@@ -3,7 +3,7 @@
 extension Time: TimeProtocol{}
 extension Time.Duration: TimeProtocol{}
 
-public protocol TimeProtocol: Codable {
+public protocol TimeProtocol: CustomStringConvertible, Codable {
     var seconds: Int { get }
     var nanoseconds: Int { get }
 
@@ -80,5 +80,23 @@ extension Double {
     public init<T: TimeProtocol>(_ time: T) {
         self = Double(time.seconds) +
             Double(time.nanoseconds / 1_000_000) / 1_000
+    }
+}
+
+// MARK: description
+
+extension TimeProtocol {
+    public var description: String {
+        switch seconds {
+        case 0:
+            switch nanoseconds {
+            case 0..<1_000: return "\(nanoseconds) ns"
+            case 1_000..<1_000_000: return "\(nanoseconds / 1_000) μs"
+            case 1_000_000...: return "\(nanoseconds / 1_000_000) ms"
+            default: fatalError("unreachable")
+            }
+        default:
+            return "\(seconds).\(nanoseconds / 1_000_000) sec"
+        }
     }
 }

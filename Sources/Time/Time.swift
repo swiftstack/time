@@ -163,21 +163,3 @@ extension Time {
             nanoseconds: time.nanoseconds)
     }
 }
-
-// MARK: description
-
-extension Time: CustomStringConvertible {
-    public var description: String {
-        switch seconds {
-        case 0:
-            switch nanoseconds {
-            case 0..<1_000: return "\(nanoseconds) ns"
-            case 1_000..<1_000_000: return "\(nanoseconds / 1_000) μs"
-            case 1_000_000...: return "\(nanoseconds / 1_000_000) ms"
-            default: fatalError("unreachable")
-            }
-        default:
-            return "\(seconds).\(nanoseconds / 1_000_000) sec"
-        }
-    }
-}
