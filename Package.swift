@@ -16,9 +16,10 @@ let package = Package(
         .target(
             name: "Time",
             dependencies: ["Platform"]),
-        .testTarget(
-            name: "TimeTests",
-            dependencies: ["Test", "Time"])
+        .executableTarget(
+            name: "Tests/Time",
+            dependencies: ["Test", "Time"],
+            path: "Tests/Time")
     ]
 )
 
