@@ -3,5 +3,5 @@
 ## Package.swift
 
 ```swift
-.package(url: "https://github.com/swift-stack/time.git", .branch("fiber"))
+.package(url: "https://github.com/swiftstack/time.git", .branch("fiber"))
 ```
