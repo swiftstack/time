@@ -21,16 +21,27 @@ let package = Package(
             name: "Time",
             dependencies: [
                 .product(name: "Platform", package: "platform"),
-            ]),
+            ],
+            swiftSettings: swift6),
         .executableTarget(
             name: "Tests/Time",
             dependencies: [
                 .target(name: "Time"),
                 .product(name: "Test", package: "test"),
             ],
-            path: "Tests/Time"),
+            path: "Tests/Time",
+            swiftSettings: swift6),
     ]
 )
+
+let swift6: [SwiftSetting] = [
+    .enableUpcomingFeature("ConciseMagicFile"),
+    .enableUpcomingFeature("ForwardTrailingClosures"),
+    .enableUpcomingFeature("ExistentialAny"),
+    .enableUpcomingFeature("StrictConcurrency"),
+    .enableUpcomingFeature("ImplicitOpenExistentials"),
+    .enableUpcomingFeature("BareSlashRegexLiterals"),
+]
 
 #if os(Linux)
 package.targets.append(.target(name: "CTime"))
