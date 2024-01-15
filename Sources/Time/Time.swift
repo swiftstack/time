@@ -127,7 +127,7 @@ extension Time {
 // MARK: arithmetic
 
 extension Time {
-    public static func +(lhs: Time, rhs: Time.Duration) -> Time {
+    public static func + (lhs: Time, rhs: Time.Duration) -> Time {
         var result = Time(seconds: 0, nanoseconds: 0)
         if lhs.nanoseconds + rhs.nanoseconds >= 1_000_000_000 {
             result.seconds = lhs.seconds + rhs.seconds + 1
@@ -139,7 +139,7 @@ extension Time {
         return result
     }
 
-    public static func -(lhs: Time, rhs: Time.Duration) -> Time {
+    public static func - (lhs: Time, rhs: Time.Duration) -> Time {
         var result = Time()
         if lhs.nanoseconds - rhs.nanoseconds < 0 {
             result.seconds = lhs.seconds - rhs.seconds - 1
@@ -153,7 +153,7 @@ extension Time {
 }
 
 extension Time {
-    static func -(lhs: Time, rhs: Time) -> Time.Duration {
+    static func - (lhs: Time, rhs: Time) -> Time.Duration {
         precondition(lhs >= rhs)
         let time = lhs - Duration(
             seconds: rhs.seconds,

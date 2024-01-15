@@ -1,7 +1,7 @@
 // MARK: DurationConvertible
 
-extension Time: TimeProtocol{}
-extension Time.Duration: TimeProtocol{}
+extension Time: TimeProtocol {}
+extension Time.Duration: TimeProtocol {}
 
 public protocol TimeProtocol: CustomStringConvertible, Codable {
     var seconds: Int { get }
