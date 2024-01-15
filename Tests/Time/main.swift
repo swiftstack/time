@@ -2,13 +2,13 @@ import Test
 import Platform
 @testable import Time
 
-test.case("Now") {
+test("Now") {
     expect(Time().ns != Time.now.ns)
     expect(Time().seconds == Time.now.seconds)
     expect(Time() > Time(seconds: 1523558109, nanoseconds: 0))
 }
 
-test.case("Duration") {
+test("Duration") {
     let duration: Time.Duration = 5.s
     let time: Time = .now
 
@@ -17,7 +17,7 @@ test.case("Duration") {
     expect(future.seconds == time.seconds + 5)
 }
 
-test.case("Interval") {
+test("Interval") {
     let location1: Time = .now
     let location2: Time = location1 + 2.s
 
@@ -32,7 +32,7 @@ test.case("Interval") {
     expect(interval2 == interval)
 }
 
-test.case("Equatable") {
+test("Equatable") {
     expect(
         Time(seconds: 1, nanoseconds: 2)
         ==
@@ -44,7 +44,7 @@ test.case("Equatable") {
         Time(seconds: 1, nanoseconds: 3))
 }
 
-test.case("Description") {
+test("Description") {
     let seconds = Time(seconds: 123, nanoseconds: 123_000_000)
     expect(seconds.description == "123.123 sec")
 
@@ -58,7 +58,7 @@ test.case("Description") {
     expect(nanoseconds.description == "123 ns")
 }
 
-test.case("Double") {
+test("Double") {
     let duration = Time.Duration(seconds: 123, nanoseconds: 321_000_000)
     let timeInterval = Double(duration)
     expect(timeInterval == 123.321)
@@ -66,10 +66,10 @@ test.case("Double") {
     expect(original == duration)
 }
 
-test.case("FromString") {
+test("FromString") {
     let time = Time("12/04/18 18:26:32", format: "%d/%m/%y %T")
     expect(time?.seconds == 1523557592)
     expect(time?.nanoseconds == 0)
 }
 
-test.run()
+await run()
