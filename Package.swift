@@ -14,7 +14,6 @@ let package = Package(
     ],
     dependencies: [
         .package(name: "Platform"),
-        .package(name: "Test"),
     ],
     targets: [
         .target(
@@ -23,13 +22,11 @@ let package = Package(
                 .product(name: "Platform", package: "platform"),
             ],
             swiftSettings: swift6),
-        .executableTarget(
-            name: "Tests/Time",
+        .testTarget(
+            name: "Tests",
             dependencies: [
                 .target(name: "Time"),
-                .product(name: "Test", package: "test"),
             ],
-            path: "Tests/Time",
             swiftSettings: swift6),
     ]
 )
