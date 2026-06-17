@@ -20,6 +20,9 @@ let package = Package(
             name: "Time",
             dependencies: [
                 .product(name: "Platform", package: "platform"),
+            ],
+            swiftSettings: [
+                .treatWarning("EmbeddedRestrictions", as: .error)
             ]),
         .testTarget(
             name: "Tests",
