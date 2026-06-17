@@ -1,7 +1,7 @@
 import Platform
 
 extension timespec {
-    @inline(__always)
+    @usableFromInline
     static func now() -> timespec {
         var ts = timespec()
         #if os(macOS) || os(iOS)
@@ -13,7 +13,6 @@ extension timespec {
     }
 
     #if os(macOS) || os(iOS)
-    @inline(__always)
     static func _clock_gettime(_ ts: inout timespec) {
         if #available(OSX 10.12, iOS 10.0, *) {
             clock_gettime(CLOCK_REALTIME, &ts)

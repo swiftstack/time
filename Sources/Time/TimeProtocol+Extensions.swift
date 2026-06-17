@@ -1,16 +1,30 @@
 // MARK: DurationConvertible
 
-extension Time: TimeProtocol {}
-extension Time.Duration: TimeProtocol {}
+extension Timestamp: TimestampProtocol {}
+extension Duration: TimestampProtocol {}
 
-public protocol TimeProtocol: CustomStringConvertible, Codable {
-    var seconds: Int { get }
-    var nanoseconds: Int { get }
+public protocol TimestampProtocol: CustomStringConvertible, Codable {
+    var attoseconds: Int128 { get }
 
-    init(seconds: Int, nanoseconds: Int)
+    var components: (seconds: Int64, attoseconds: Int64) { get }
+
+    init(secondsComponent: Int64, attosecondsComponent: Int64)
 }
 
-extension TimeProtocol {
+extension Duration {
+    public init(seconds: Int, nanoseconds: Int) {
+        self.init(
+            secondsComponent: Int64(seconds),
+            attosecondsComponent: Int64(nanoseconds) * 1_000_000_000
+        )
+    }
+
+    var nanoseconds: Int {
+        Int(attoseconds / 1_000_000_000)
+    }
+}
+
+extension Timestamp {
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         self = Self(try container.decode(Double.self))
@@ -22,81 +36,91 @@ extension TimeProtocol {
     }
 }
 
-extension TimeProtocol {
+extension TimestampProtocol {
+    @inline(always)
     public var s: Int {
-        return seconds
+        ms / 1_000
     }
 
+    @inline(always)
     public var ms: Int {
-        return seconds * 1_000 + nanoseconds / 1_000_000
+        us / 1_000
     }
 
+    @inline(always)
     public var us: Int {
-        return seconds * 1_000_000 + nanoseconds / 1_000
+        ns / 1_000
     }
 
+    @inline(always)
     public var ns: Int {
-        return seconds * 1_000_000_000 + nanoseconds
+        Int(attoseconds / 1_000_000_000)
     }
 }
 
 extension IntegerLiteralType {
-    public var s: Time.Duration {
+    public var s: Duration {
         return .init(seconds: self, nanoseconds: 0)
     }
 
-    public var ms: Time.Duration {
+    public var ms: Duration {
         return .init(seconds: self / 1_000, nanoseconds: self * 1_000_000)
     }
 
-    public var us: Time.Duration {
+    public var us: Duration {
         return .init(seconds: self / 1_000_000, nanoseconds: self * 1_000)
     }
 
-    public var ns: Time.Duration {
+    public var ns: Duration {
         return .init(seconds: self / 1_000_000_000, nanoseconds: self)
     }
 }
 
 // MARK: Double
 
-extension TimeProtocol {
+extension TimestampProtocol {
     @inlinable
     public init(_ double: Double) {
         let seconds = Int(double)
         let milliseconds = Int(double * 1_000 - Double(seconds) * 1_000)
         let nanoseconds = milliseconds * 1_000_000
-        self.init(seconds: seconds, nanoseconds: nanoseconds)
+        self.init(
+            secondsComponent: Int64(seconds),
+            attosecondsComponent: Int64(nanoseconds) * 1_000_000_000
+        )
     }
 }
 
 extension Double {
     @inlinable
-    public init(_ interval: Time.Interval) {
-        self.init(interval.duration)
-    }
-
-    @inlinable
-    public init<T: TimeProtocol>(_ time: T) {
-        self = Double(time.seconds) +
-            Double(time.nanoseconds / 1_000_000) / 1_000
+    public init<T: TimestampProtocol>(_ time: T) {
+        self = Double(time.components.seconds) +
+            Double(time.components.attoseconds / 1_000_000_000_000_000) / 1_000
     }
 }
 
 // MARK: description
 
-extension TimeProtocol {
+extension TimestampProtocol {
     public var description: String {
-        switch seconds {
+        switch components.seconds {
         case 0:
-            switch nanoseconds {
-            case 0..<1_000: return "\(nanoseconds) ns"
-            case 1_000..<1_000_000: return "\(nanoseconds / 1_000) μs"
-            case 1_000_000...: return "\(nanoseconds / 1_000_000) ms"
-            default: fatalError("unreachable")
+            switch components.attoseconds {
+            case 0..<1_000_000_000: 
+                return "\(components.attoseconds) as"
+            case 1_000_000_000..<1_000_000_000_000: 
+                return "\(components.attoseconds / 1_000_000_000) ns"
+            case 1_000_000_000_000..<1_000_000_000_000_000: 
+                return "\(components.attoseconds / 1_000_000_000_000) μs"
+            case 1_000_000_000_000_000...: 
+                return "\(components.attoseconds / 1_000_000_000_000_000) ms"
+            default:
+                fatalError("unreachable")
             }
         default:
-            return "\(seconds).\(nanoseconds / 1_000_000) sec"
+            let seconds = components.seconds
+            let milliseconds = components.attoseconds / 1_000_000_000_000_000
+            return "\(seconds).\(milliseconds) sec"
         }
     }
 }

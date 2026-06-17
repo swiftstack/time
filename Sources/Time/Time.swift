@@ -3,72 +3,69 @@ import CTime
 #endif
 import Platform
 
-public struct Time {
-    public var seconds: Int
-    public var nanoseconds: Int
+public struct Timestamp: Equatable {
+    // since 1970 ;)
+    @usableFromInline
+    var duration: Duration
 
-    public init(seconds: Int, nanoseconds: Int) {
-        self.seconds = seconds
-        self.nanoseconds = nanoseconds
+    @inlinable
+    public var attoseconds: Int128 {
+        duration.attoseconds
     }
 
-    public struct Duration {
-        public var seconds: Int
-        public var nanoseconds: Int
-
-        public init(seconds: Int, nanoseconds: Int) {
-            self.seconds = seconds
-            self.nanoseconds = nanoseconds
-        }
+    @inlinable
+    public var components: (seconds: Int64, attoseconds: Int64) {
+        duration.components
     }
 
-    public struct Interval {
-        public let location: Time
-        public let duration: Duration
-
-        public init(location: Time, duration: Duration) {
-            self.location = location
-            self.duration = duration
-        }
+    @inlinable
+    public init(secondsComponent: Int64, attosecondsComponent: Int64) {
+        self.duration = .init(
+            secondsComponent: secondsComponent,
+            attosecondsComponent: attosecondsComponent
+        )
     }
 }
 
-extension Time {
+// MARK: reason
+
+extension Timestamp {
+    @inlinable
     public init() {
         let ts = timespec.now()
-        self.seconds = ts.tv_sec
-        self.nanoseconds = ts.tv_nsec
+        self.init(
+            seconds: .init(ts.tv_sec),
+            nanoseconds: .init(ts.tv_nsec)
+        )
     }
 
-    public static var now: Time {
-        return Time()
+    @inlinable
+    public init(seconds: Int, nanoseconds: Int) {
+        self.duration = .init(
+            secondsComponent: Int64(seconds),
+            attosecondsComponent: Int64(nanoseconds) * 1_000_000_000
+        )
     }
 
-    public static var distantFuture: Time {
-        return Time(seconds: Int.max, nanoseconds: Int.max)
+    @inlinable
+    public static var now: Timestamp {
+        return Timestamp()
     }
 
-    public var timeIntervalSinceNow: Time.Interval {
-            return interval(Time())
+    @inlinable
+    public static var distantFuture: Timestamp {
+        return Timestamp(seconds: .max, nanoseconds: .max)
     }
 
-    public func interval(_ location: Time) -> Interval {
-        return Interval(self, location)
-    }
-}
-
-extension Time.Interval {
-    public init(_ point1: Time, _ point2: Time) {
-        switch point1 < point2 {
-        case true: self.init(location: point1, duration: point2 - point1)
-        case false: self.init(location: point2, duration: point1 - point2)
-        }
+    @inlinable
+    public var timeIntervalSinceNow: Duration {
+        self.duration - Timestamp.now.duration
     }
 }
 
 // MARK: from string
 
-extension Time {
+extension Timestamp {
     public init?(_ string: String, format: String) {
         var t = tm()
         guard strptime(string, format, &t) != nil else {
@@ -78,88 +75,45 @@ extension Time {
         guard time != -1 else {
             return nil
         }
-        self.init(seconds: time, nanoseconds: 0)
-    }
-}
-
-// MARK: Equatable
-
-extension Time: Equatable {
-    public static func == (lhs: Time, rhs: Time) -> Bool {
-        return lhs.seconds == rhs.seconds && lhs.nanoseconds == rhs.nanoseconds
-    }
-}
-
-extension Time.Duration: Equatable {
-    public static func == (lhs: Time.Duration, rhs: Time.Duration) -> Bool {
-        return lhs.seconds == rhs.seconds && lhs.nanoseconds == rhs.nanoseconds
-    }
-}
-
-extension Time.Interval: Equatable {
-    public static func == (lhs: Time.Interval, rhs: Time.Interval) -> Bool {
-        return lhs.location == rhs.location && lhs.duration == rhs.duration
+        self.init(seconds: .init(time), nanoseconds: 0)
     }
 }
 
 // MARK: Comparable
 
-extension Time: Comparable {
-    public static func < (lhs: Time, rhs: Time) -> Bool {
-        switch lhs.seconds < rhs.seconds {
-        case true: return true
-        case false where lhs.seconds > rhs.seconds: return false
-        default: return lhs.nanoseconds < rhs.nanoseconds
-        }
+extension Timestamp: Comparable {
+    public static func < (lhs: Timestamp, rhs: Timestamp) -> Bool {
+        lhs.duration < rhs.duration
     }
 }
 
-extension Time {
-    public static func < (lhs: Time, rhs: timespec) -> Bool {
-        switch lhs.seconds < rhs.tv_sec {
-        case true: return true
-        case false where lhs.seconds > rhs.tv_sec: return false
-        default: return lhs.nanoseconds < rhs.tv_nsec
-        }
+extension Timestamp {
+    public static func < (lhs: Timestamp, rhs: timespec) -> Bool {
+        lhs.duration < Timestamp(
+            seconds: .init(rhs.tv_sec),
+            nanoseconds: .init(rhs.tv_nsec)
+        ).duration
     }
 }
 
 // MARK: arithmetic
 
-extension Time {
-    public static func + (lhs: Time, rhs: Time.Duration) -> Time {
-        var result = Time(seconds: 0, nanoseconds: 0)
-        if lhs.nanoseconds + rhs.nanoseconds >= 1_000_000_000 {
-            result.seconds = lhs.seconds + rhs.seconds + 1
-            result.nanoseconds = lhs.nanoseconds + rhs.nanoseconds - 1000000000
-        } else {
-            result.seconds = lhs.seconds + rhs.seconds
-            result.nanoseconds = lhs.nanoseconds + rhs.nanoseconds
-        }
-        return result
+extension Timestamp {
+    public static func + (lhs: Timestamp, rhs: Duration) -> Timestamp {
+        var timestamp = lhs
+        timestamp.duration += rhs
+        return timestamp
     }
 
-    public static func - (lhs: Time, rhs: Time.Duration) -> Time {
-        var result = Time()
-        if lhs.nanoseconds - rhs.nanoseconds < 0 {
-            result.seconds = lhs.seconds - rhs.seconds - 1
-            result.nanoseconds = lhs.nanoseconds - rhs.nanoseconds + 1000000000
-        } else {
-            result.seconds = lhs.seconds - rhs.seconds
-            result.nanoseconds = lhs.nanoseconds - rhs.nanoseconds
-        }
-        return result
+    public static func - (lhs: Timestamp, rhs: Duration) -> Timestamp {
+        var timestamp = lhs
+        timestamp.duration -= rhs
+        return timestamp
     }
 }
 
-extension Time {
-    static func - (lhs: Time, rhs: Time) -> Time.Duration {
-        precondition(lhs >= rhs)
-        let time = lhs - Duration(
-            seconds: rhs.seconds,
-            nanoseconds: rhs.nanoseconds)
-        return Time.Duration(
-            seconds: time.seconds,
-            nanoseconds: time.nanoseconds)
+extension Timestamp {
+    static func - (lhs: Timestamp, rhs: Timestamp) -> Duration {
+        lhs.duration - rhs.duration
     }
 }
